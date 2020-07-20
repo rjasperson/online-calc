@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <script src="/socket.io.js"></script>
+        <p>Calculator Web App - Ryan Jasperson</p>
+
+        <script type="text/javascript">
+
+            var populate = [];
+            var resultArray = [];
+            window.onload = function(){
+
+                var equals = JSON.parse(sessionStorage.getItem("equals"));
+                var refresh = JSON.parse(sessionStorage.getItem("refresh"));
+                var html = document.getElementById("results").innerHTML;
+                var tableMax = document.getElementById("results").rows.length + 1;
+                populate = equals.split(" ");
+                populate.splice(-1, 1);
+
+                for(var i = 0; i < populate.length; i++){ //populate table with old values
+                    var html = document.getElementById("results").innerHTML;
+                    document.getElementById("results").innerHTML = "<tr><td>" + populate[i] + "</td></tr>" + html;
+
+                    resultArray += populate[i] + " ";
+                    sessionStorage.setItem("refresh", JSON.stringify(resultArray));
+
+                    var tableMax = document.getElementById("results").rows.length;
+                    if(tableMax > 10){ //display max of 10 results on load
+                       html += document.getElementById("results").deleteRow(10);
+                    }
+                }                
+            }
+
+            var socket = io();
+            var resultArray = [];
+
+            socket.on("new_result", (data) => { //results to update list, populate list with new values
+                
+                var html = document.getElementById("results").innerHTML;
+                var tableMax = document.getElementById("results").rows.length + 1;
+                
+                document.getElementById("results").innerHTML = "<tr><td>" + (data.input + "=" + data.result) + "</td></tr>" + html;
+                
+                resultArray += data.input + "=" + data.result + " ";
+                console.log(resultArray);
+                sessionStorage.setItem("equals", JSON.stringify(resultArray)); //place table results into session storage on equals press
+                
+                if(tableMax > 10){ //display max of 10 results
+                    html += document.getElementById("results").deleteRow(10);
+                }
+            });
+
+            function getValue(n){ //gets value from button to insert into calculator screen
+
+                var calcInput = document.getElementById("input");
+                calcInput.value += n;
+            }
+
+            function calculate(){ //tells server to run calculation
+
+                socket.emit("calculate", {input: document.getElementById("input").value});
+                clearScreen();
+            }
+
+            function clearScreen(){ //clears calculator screen
+                
+                document.getElementById("input").value = "";
+            }
+
+        </script>
+
+        <table id="calc">
+            <td>
+                <input type="text" id="input" readonly="readonly">
+
+                <input type="button" value="1" onclick="getValue(1)"></input>
+                <input type="button" value="2" onclick="getValue(2)"></input>
+                <input type="button" value="3" onclick="getValue(3)"></input>
+                <br>
+                <input type="button" value="4" onclick="getValue(4)"></input>
+                <input type="button" value="5" onclick="getValue(5)"></input>
+                <input type="button" value="6" onclick="getValue(6)"></input>
+                <br>
+                <input type="button" value="7" onclick="getValue(7)"></input>
+                <input type="button" value="8" onclick="getValue(8)"></input>
+                <input type="button" value="9" onclick="getValue(9)"></input>
+                <br>
+                <input type="button" value="0" onclick="getValue(0)"></input>
+                <input type="button" value="C" onclick="clearScreen()"></input>
+                <input type="button" value="+" onclick="getValue('+')"></input>
+                <br>
+                <input type="button" value="-" onclick="getValue('-')"></input>
+                <input type="button" value="*" onclick="getValue('*')"></input>
+                <input type="button" value="/" onclick="getValue('/')"></input>
+                <input type="button" value="=" onclick="calculate()"></input>
+            </td>
+        </table>
+
+        <table id="results">
+            
+        </table>
+    </head>
+
+    <body>
+
+        
+    </body>
+</html>
